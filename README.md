@@ -1,0 +1,2 @@
+# ai bootcamp practical lab
+
