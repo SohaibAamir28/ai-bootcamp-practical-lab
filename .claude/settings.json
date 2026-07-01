@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "additionalDirectories": [
+      "c:\\Users\\Sohaib Aamir\\Downloads\\ai_bootcamp_practical_lab\\day2"
+    ],
+    "allow": [
+      "PowerShell(Get-Content \"$env:APPDATA\\\\Docker\\\\settings.json\" -ErrorAction SilentlyContinue | Select-Object -First 50)"
+    ]
+  }
+}
