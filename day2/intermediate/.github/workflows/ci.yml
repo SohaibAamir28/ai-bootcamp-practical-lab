@@ -1,0 +1,53 @@
+# =============================================================================
+# INTERMEDIATE CI PIPELINE
+# Runs on every push and pull request.
+#
+# WHAT IS CI?
+#   Continuous Integration = automatically test code before it reaches users.
+#   Every push triggers this workflow on a fresh GitHub-managed Ubuntu machine.
+#   If any step fails → the push is blocked, developers are notified.
+#
+# NOTE: In a real project this file lives at .github/workflows/ci.yml
+#       at the ROOT of your repository, not inside a subfolder.
+# =============================================================================
+
+name: AI App CI
+
+on: [push, pull_request]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── Step 1: Download the code ──────────────────────────────────────────
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # ── Step 2: Install Python ─────────────────────────────────────────────
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      # ── Step 3: Install dependencies ──────────────────────────────────────
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      # ── Step 4: Lint ──────────────────────────────────────────────────────
+      # ruff finds syntax errors, unused imports, undefined variables
+      # in under 1 second. Faster than flake8 or pylint.
+      - name: Lint with ruff
+        run: ruff check .
+
+      # ── Step 5: Run tests ─────────────────────────────────────────────────
+      # Tests run without real API calls — they only test validation logic.
+      # No GROQ_API_KEY needed here (tests don't hit the LLM).
+      - name: Run tests
+        run: pytest tests/ -v
+
+      # ── Step 6: Build Docker image ────────────────────────────────────────
+      # This proves the Dockerfile is valid and the image can actually be built.
+      # A passing build ≠ a working app — but a failing build = definitely broken.
+      - name: Build Docker image
+        run: docker build -t ai-coach:ci-test .

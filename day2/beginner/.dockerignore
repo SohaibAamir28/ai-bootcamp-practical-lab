@@ -1,0 +1,15 @@
+# .dockerignore tells Docker what NOT to copy into the image
+# when you write "COPY . ." in the Dockerfile
+
+# THE MOST IMPORTANT ONE — your API keys
+# Without this line, your secret key gets baked into the image.
+# Anyone who pulls the image from Docker Hub gets your key.
+.env
+
+# Python cache files — not needed inside the container
+__pycache__/
+*.pyc
+*.pyo
+
+# Git history — not needed at runtime, adds size
+.git/

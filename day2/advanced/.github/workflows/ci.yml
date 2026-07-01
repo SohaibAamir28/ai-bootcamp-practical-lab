@@ -1,0 +1,75 @@
+# =============================================================================
+# ADVANCED CI PIPELINE
+# Adds: dependency caching (faster installs), matrix testing (two Python versions)
+# =============================================================================
+
+name: Advanced AI App CI
+
+on:
+  push:
+    branches: ["main", "dev"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    # Matrix: run the same job for Python 3.11 AND 3.12
+    # If it passes on both, we know we're not tied to one specific version.
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      # ── Dependency caching ─────────────────────────────────────────────────
+      # GitHub Actions caches the pip download cache between runs.
+      # If requirements.txt hasn't changed, packages are restored from cache
+      # instead of downloaded from PyPI. Saves 30-60 seconds per run.
+      - name: Cache pip packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Lint with ruff
+        run: ruff check .
+
+      - name: Run tests
+        env:
+          GROQ_API_KEY: "test-key"   # mocked in tests, real key not needed
+        run: pytest tests/ -v
+
+  docker:
+    runs-on: ubuntu-latest
+    needs: test   # only build Docker image if tests pass
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # ── Docker layer caching ───────────────────────────────────────────────
+      # Cache Docker layers between CI runs using GitHub Actions cache.
+      # Same trick as local layer caching but for the CI machine.
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image with cache
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: false            # don't push to registry, just verify it builds
+          tags: ai-coach:ci-test
+          cache-from: type=gha  # read from GitHub Actions cache
+          cache-to: type=gha,mode=max  # write to GitHub Actions cache

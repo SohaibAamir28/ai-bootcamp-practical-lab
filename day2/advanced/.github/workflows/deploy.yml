@@ -1,0 +1,64 @@
+# =============================================================================
+# DEPLOY TO HUGGING FACE SPACES
+#
+# Triggers automatically when code is pushed to the "main" branch
+# AND the CI pipeline passes.
+#
+# SETUP (do this once in GitHub):
+#   1. Go to your GitHub repo → Settings → Secrets and variables → Actions
+#   2. Add secret: HF_TOKEN  (your Hugging Face write token)
+#   3. Add secret: HF_USERNAME  (your Hugging Face username)
+#   4. Create a Hugging Face Space: huggingface.co/new-space
+#      - SDK: Docker
+#      - Name: ai-writing-coach (or whatever you want)
+#
+# HOW IT WORKS:
+#   GitHub clones your Hugging Face Space repo, copies your files into it,
+#   then pushes. Hugging Face automatically builds and deploys the Docker image.
+#
+# NOTE: Hugging Face Spaces runs on port 7860, not 8000.
+#       The Dockerfile CMD is overridden here to use --port 7860.
+# =============================================================================
+
+name: Deploy to Hugging Face Spaces
+
+on:
+  push:
+    branches: ["main"]
+
+# Only run if CI passes
+# (In a real repo you'd use "needs: [test]" by putting both jobs in one workflow file)
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # full history needed for git push
+
+      - name: Push to Hugging Face Spaces
+        env:
+          HF_TOKEN:    ${{ secrets.HF_TOKEN }}
+          HF_USERNAME: ${{ secrets.HF_USERNAME }}
+          HF_SPACE:    ai-writing-coach   # change to your Space name
+        run: |
+          git config --global user.email "ci@github.com"
+          git config --global user.name  "GitHub Actions"
+
+          # Clone the HF Space repo
+          git clone https://$HF_USERNAME:$HF_TOKEN@huggingface.co/spaces/$HF_USERNAME/$HF_SPACE hf_space
+
+          # Copy app files (exclude secrets and CI files)
+          rsync -av --exclude='.git' --exclude='.env' --exclude='.github' . hf_space/
+
+          # Patch the Dockerfile: Hugging Face Spaces uses port 7860
+          sed -i 's/--port 8000/--port 7860/' hf_space/Dockerfile
+          sed -i 's/EXPOSE 8000/EXPOSE 7860/' hf_space/Dockerfile
+
+          # Push to HF
+          cd hf_space
+          git add -A
+          git diff --staged --quiet || git commit -m "Deploy from GitHub ${{ github.sha }}"
+          git push

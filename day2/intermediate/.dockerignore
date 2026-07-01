@@ -1,0 +1,36 @@
+# =============================================================================
+# .dockerignore — What to EXCLUDE from the Docker image
+# Every file NOT listed here gets copied in via "COPY . ."
+# =============================================================================
+
+# ── SECRETS (most critical) ────────────────────────────────────────────────────
+# Missing this = your API key is inside the public Docker image.
+.env
+*.key
+*.pem
+secrets/
+
+# ── Python cache ───────────────────────────────────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.venv/
+venv/
+
+# ── Development files ──────────────────────────────────────────────────────────
+.git/
+.gitignore
+notebooks/
+*.ipynb
+.ipynb_checkpoints/
+
+# ── IDE configs ────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+
+# ── CI & docs (not needed at runtime) ─────────────────────────────────────────
+.github/
+*.md
+tests/

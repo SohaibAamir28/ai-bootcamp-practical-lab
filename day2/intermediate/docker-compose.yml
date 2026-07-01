@@ -1,0 +1,35 @@
+# =============================================================================
+# DOCKER COMPOSE — Intermediate
+#
+# WHY use docker-compose instead of plain docker run?
+#
+#   docker run -p 8000:8000 -e GROQ_API_KEY=... -e OTHER_KEY=... \
+#              --restart unless-stopped --name ai-coach ai-coach:v2
+#
+#   That command gets long and hard to remember. docker-compose lets you
+#   write it once in a file and run it with just: docker-compose up
+#
+# COMMANDS:
+#   docker-compose up --build       <- build image + start container
+#   docker-compose up -d            <- start in background (detached)
+#   docker-compose logs -f          <- stream live logs
+#   docker-compose down             <- stop and remove containers
+#   docker-compose restart app      <- restart just the app service
+# =============================================================================
+
+version: '3.8'
+
+services:
+  app:
+    build: .                        # build from the Dockerfile in this folder
+    ports:
+      - "8000:8000"                 # host:container
+    env_file:
+      - .env                        # load GROQ_API_KEY from .env file
+    restart: unless-stopped         # restart if it crashes (but not if you stop it manually)
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s                 # check every 30 seconds
+      timeout: 10s                  # fail if no response in 10s
+      retries: 3                    # mark unhealthy after 3 failures
+      start_period: 10s             # give the app 10s to start before checking

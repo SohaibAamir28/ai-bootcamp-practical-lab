@@ -1,0 +1,47 @@
+# =============================================================================
+# DOCKER COMPOSE — Advanced
+#
+# Adds two things the intermediate version was missing:
+#   1. Named volumes  (persistent storage that survives container restarts)
+#   2. Second service (shows how multi-service apps work)
+#
+# COMMANDS:
+#   docker-compose up --build -d    <- build and start in background
+#   docker-compose logs -f app      <- stream app logs only
+#   docker-compose ps               <- see container status and health
+#   docker-compose down             <- stop containers
+#   docker-compose down -v          <- stop + delete volumes (careful!)
+# =============================================================================
+
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      # Named volume: logs written here survive container restarts.
+      # The app can write to /app/logs/app.log and it persists.
+      - app_logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    # Resource limits: prevent the container from eating all RAM
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+
+# Named volumes are managed by Docker (not tied to a host path).
+# This is safer than bind-mounts for production.
+volumes:
+  app_logs:
