@@ -1,0 +1,28 @@
+# ── Secrets — NEVER let these reach a container image ─────────────────────────
+# If .env is missing from this file, your API keys get baked into the image
+# and anyone who pulls it from Docker Hub has your keys.
+.env
+*.key
+*.pem
+
+# ── Python build artifacts ─────────────────────────────────────────────────────
+*.pyc
+*.pyo
+__pycache__/
+*.egg-info/
+.venv/
+venv/
+
+# ── Development and notebook files ────────────────────────────────────────────
+.git/
+notebooks/
+*.ipynb
+.ipynb_checkpoints/
+
+# ── IDE files ─────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+
+# ── CI / docs (not needed at runtime) ─────────────────────────────────────────
+.github/
+*.md

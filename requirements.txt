@@ -1,0 +1,11 @@
+fastapi
+uvicorn[standard]
+anthropic
+openai
+ragas
+datasets
+python-dotenv
+httpx
+ruff
+pytest
+pytest-asyncio

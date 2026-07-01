@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./venv/Scripts/uvicorn day1.step1_logging:app --reload --port 8001)",
+      "Bash(curl -s http://localhost:8001/health)",
+      "Bash(curl -s -X POST http://localhost:8001/chat -H 'Content-Type: application/json' -d '{\"message\": \"Fix my grammer in this sentance\"}')"
+    ]
+  }
+}
